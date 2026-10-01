@@ -17,7 +17,7 @@ FlowOps é uma API para organizar empresas, usuários, projetos, tarefas e audit
 
 O sistema permitirá controlar acessos por empresa, distribuir tarefas, acompanhar o andamento dos projetos e validar entregas antes da conclusão.
 
-## Funcionalidades
+## Funcionalidades planejadas
 
 - Cadastro e gerenciamento de empresas.
 - Cadastro de usuários e solicitação de vínculo empresarial.

@@ -8,6 +8,6 @@ public record EmpresaRequest(
         @NotBlank String razaoSocial,
         @NotBlank String nomeFantasia,
         @NotBlank @Pattern(regexp = "\\d{14}") String cnpj,
-        @NotNull Boolean ativa
+        @NotNull Boolean flgAtivo
 ) {
 }
