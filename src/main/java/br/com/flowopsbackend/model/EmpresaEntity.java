@@ -6,40 +6,41 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "empresas")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Empresa {
+@Setter
+@NoArgsConstructor
+public class EmpresaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "razao_social")
     private String razaoSocial;
 
-    @Column(nullable = false)
+    @Column(name = "nome_fantasia", nullable = false)
     private String nomeFantasia;
 
-    @Column(nullable = false, unique = true, length = 14)
+    @Column(name = "cnpj", nullable = false, unique = true, length = 14)
     private String cnpj;
 
-    @Column(nullable = false)
-    private boolean ativa;
+    @Column(name = "flg_ativo", nullable = false)
+    private boolean flgAtivo;
 
-    public Empresa(String razaoSocial, String nomeFantasia, String cnpj, boolean ativa) {
-        atualizar(razaoSocial, nomeFantasia, cnpj, ativa);
+    public EmpresaEntity(String razaoSocial, String nomeFantasia, String cnpj, boolean flgAtivo) {
+        atualizar(razaoSocial, nomeFantasia, cnpj, flgAtivo);
     }
 
-    public void atualizar(String razaoSocial, String nomeFantasia, String cnpj, boolean ativa) {
+    public void atualizar(String razaoSocial, String nomeFantasia, String cnpj, boolean flgAtivo) {
         this.razaoSocial = razaoSocial;
         this.nomeFantasia = nomeFantasia;
         this.cnpj = cnpj;
-        this.ativa = ativa;
+        this.flgAtivo = flgAtivo;
     }
 }
