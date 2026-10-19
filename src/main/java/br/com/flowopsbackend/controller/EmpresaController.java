@@ -1,5 +1,6 @@
 package br.com.flowopsbackend.controller;
 
+import br.com.flowopsbackend.dto.request.EmpresaCadastroRequest;
 import br.com.flowopsbackend.dto.request.EmpresaRequest;
 import br.com.flowopsbackend.dto.response.EmpresaResponse;
 import br.com.flowopsbackend.service.EmpresaService;
@@ -27,7 +28,7 @@ public class EmpresaController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public EmpresaResponse criar(@Valid @RequestBody EmpresaRequest request) {
+    public EmpresaResponse criar(@Valid @RequestBody EmpresaCadastroRequest request) {
         return empresaService.criar(request);
     }
 

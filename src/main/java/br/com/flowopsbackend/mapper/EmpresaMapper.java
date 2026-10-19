@@ -1,5 +1,6 @@
 package br.com.flowopsbackend.mapper;
 
+import br.com.flowopsbackend.dto.request.EmpresaCadastroRequest;
 import br.com.flowopsbackend.dto.request.EmpresaRequest;
 import br.com.flowopsbackend.dto.response.EmpresaResponse;
 import br.com.flowopsbackend.model.EmpresaEntity;
@@ -9,6 +10,15 @@ import org.springframework.stereotype.Component;
 public class EmpresaMapper {
 
     public EmpresaEntity toEntity(EmpresaRequest request) {
+        return new EmpresaEntity(
+                request.razaoSocial(),
+                request.nomeFantasia(),
+                request.cnpj(),
+                request.flgAtivo()
+        );
+    }
+
+    public EmpresaEntity toEntity(EmpresaCadastroRequest request) {
         return new EmpresaEntity(
                 request.razaoSocial(),
                 request.nomeFantasia(),
