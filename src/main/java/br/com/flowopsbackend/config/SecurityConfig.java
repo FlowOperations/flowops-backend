@@ -67,6 +67,9 @@ public class SecurityConfig {
 
     @Bean
     SecretKey jwtSecretKey(@Value("${flowops.security.jwt.secret}") String secret) {
+        if (secret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException("A chave JWT deve possuir pelo menos 32 bytes");
+        }
         return new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
     }
 

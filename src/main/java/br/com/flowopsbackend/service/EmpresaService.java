@@ -47,7 +47,7 @@ public class EmpresaService {
     }
 
     public List<EmpresaResponse> listar() {
-        return empresaRepository.findAll()
+        return empresaRepository.findByFlgAtivoTrueOrderByNomeFantasia()
                 .stream()
                 .map(empresaMapper::toResponse)
                 .toList();
