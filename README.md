@@ -1,52 +1,59 @@
 <div align="center">
 
-# FlowOps
+# FlowOps API
 
-### Sistema de operação e acompanhamento de fluxos empresariais
+Backend para gestão de empresas, projetos, tarefas e auditorias.
 
-![Java](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.6-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
-![Status](https://img.shields.io/badge/Status-Em_desenvolvimento-F4A261?style=for-the-badge)
+![Java](https://img.shields.io/badge/Java-21-ED8B00?style=flat-square&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.6-6DB33F?style=flat-square&logo=springboot&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?style=flat-square&logo=postgresql&logoColor=white)
 
 </div>
 
-## Sobre o projeto
+## Recursos
 
-FlowOps é uma API para organizar empresas, usuários, projetos, tarefas e auditorias em um fluxo centralizado.
+- Autenticação stateless com JWT.
+- Cadastro de usuários e empresas.
+- Aprovação de vínculos empresariais.
+- Controle de acesso por papel e projeto.
+- Gestão de projetos, membros e tarefas.
+- Fluxo de auditoria, aprovação e correção.
+- Progresso calculado por tarefas aprovadas.
+- Notificações por e-mail configuráveis.
+- Documentação OpenAPI e Swagger.
 
-O sistema permitirá controlar acessos por empresa, distribuir tarefas, acompanhar o andamento dos projetos e validar entregas antes da conclusão.
+## Tecnologias
 
-## Funcionalidades planejadas
+- Java 21
+- Spring Boot 3.5.6
+- Spring Security e OAuth2 Resource Server
+- Spring Data JPA e Hibernate
+- PostgreSQL
+- Maven
+- JUnit, Mockito e H2
 
-- Cadastro e gerenciamento de empresas.
-- Cadastro de usuários e solicitação de vínculo empresarial.
-- Controle de acesso por papel e cargo.
-- Gerenciamento de projetos e membros.
-- Criação e atribuição de tarefas.
-- Fluxo de envio, auditoria e correção de tarefas.
-- Cálculo automático do progresso dos projetos.
-- Notificações de acesso e auditoria.
+## Configuração local
 
-## Tecnologias utilizadas
+```powershell
+$env:FLOWOPS_DB_PASSWORD="sua-senha"
+.\mvnw.cmd spring-boot:run
+```
 
-- **Java 21**
-- **Spring Boot 3.5.6**
-- **Spring Security** com JWT e OAuth2
-- **PostgreSQL**
-- **Hibernate/JPA**
-- **Swagger/OpenAPI**
-- **Maven**
+A API utiliza `http://localhost:8080`. O Swagger fica disponível em `http://localhost:8080/swagger-ui.html`.
 
-## Estrutura do backend
+## Variáveis principais
 
-```text
-src/main/java/br/com/flowopsbackend
-├── controller
-├── dto
-│   ├── request
-│   └── response
-├── model
-├── repository
-├── security
-└── service
+| Variável | Finalidade |
+|---|---|
+| `FLOWOPS_DB_URL` | URL JDBC do PostgreSQL |
+| `FLOWOPS_DB_USERNAME` | Usuário do banco |
+| `FLOWOPS_DB_PASSWORD` | Senha do banco |
+| `FLOWOPS_JWT_SECRET` | Chave JWT com pelo menos 32 bytes |
+| `FLOWOPS_CORS_ORIGINS` | Origens permitidas |
+| `FLOWOPS_MAIL_ENABLED` | Ativa o envio de e-mails |
+
+## Validação
+
+```powershell
+.\mvnw.cmd test
+```
