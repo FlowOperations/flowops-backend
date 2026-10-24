@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -23,6 +25,14 @@ public class UsuarioService {
 
     public UsuarioResponse buscarAtual() {
         return mapper.toResponse(accessControlService.getUsuarioAtual());
+    }
+
+    public List<UsuarioResponse> listarAtivos() {
+        accessControlService.exigirAdminFlowOps();
+        return usuarioRepository.findByAtivoTrueOrderByNomeCompleto()
+                .stream()
+                .map(mapper::toResponse)
+                .toList();
     }
 
     @Transactional
