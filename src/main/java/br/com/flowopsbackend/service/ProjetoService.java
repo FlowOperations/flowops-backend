@@ -12,6 +12,7 @@ import br.com.flowopsbackend.model.ProjetoEntity;
 import br.com.flowopsbackend.model.ProjetoMembroEntity;
 import br.com.flowopsbackend.model.UsuarioEntity;
 import br.com.flowopsbackend.model.enums.PapelEmpresa;
+import br.com.flowopsbackend.model.enums.PerfilSistema;
 import br.com.flowopsbackend.model.enums.StatusTarefa;
 import br.com.flowopsbackend.model.enums.StatusVinculo;
 import br.com.flowopsbackend.repository.EmpresaRepository;
@@ -168,7 +169,8 @@ public class ProjetoService {
     }
 
     private boolean temAcesso(UsuarioEntity usuario, ProjetoEntity projeto) {
-        return projeto.getGestorResponsavel().getId().equals(usuario.getId())
+        return usuario.getPerfilSistema() == PerfilSistema.ADMIN_FLOWOPS
+                || projeto.getGestorResponsavel().getId().equals(usuario.getId())
                 || membroRepository.existsByProjetoIdAndUsuarioIdAndAtivoTrue(projeto.getId(), usuario.getId())
                 || vinculoRepository.existsByUsuarioIdAndEmpresaIdAndPapelInAndStatusAndAtivoTrue(
                 usuario.getId(), projeto.getEmpresa().getId(), Set.of(PapelEmpresa.GESTOR), StatusVinculo.APROVADO);

@@ -5,11 +5,13 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
 public record EmpresaCadastroRequest(
-        @NotBlank String razaoSocial,
-        @NotBlank String nomeFantasia,
-        @NotBlank @Pattern(regexp = "\\d{14}") String cnpj,
-        @NotNull Boolean flgAtivo,
-        @NotNull Long gestorInicialId,
-        @NotBlank String cargoGestor
+        @NotBlank(message = "Informe a razão social.") String razaoSocial,
+        @NotBlank(message = "Informe o nome fantasia.") String nomeFantasia,
+        @NotBlank(message = "Informe o CNPJ.")
+        @Pattern(regexp = "\\d{14}", message = "O CNPJ deve conter exatamente 14 dígitos.")
+        String cnpj,
+        @NotNull(message = "Informe se a empresa está ativa.") Boolean flgAtivo,
+        @NotNull(message = "Selecione o gestor inicial.") Long gestorInicialId,
+        @NotBlank(message = "Informe o cargo do gestor.") String cargoGestor
 ) {
 }
