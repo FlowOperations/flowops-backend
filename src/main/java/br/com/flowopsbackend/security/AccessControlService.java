@@ -39,7 +39,7 @@ public class AccessControlService {
 
     public UsuarioEntity exigirGestaoEmpresa(Long empresaId) {
         UsuarioEntity usuario = getUsuarioAtual();
-        if (!possuiPapel(usuario.getId(), empresaId, GESTAO)) {
+        if (!isAdmin(usuario) && !possuiPapel(usuario.getId(), empresaId, GESTAO)) {
             throw acessoNegado();
         }
         return usuario;
@@ -47,7 +47,7 @@ public class AccessControlService {
 
     public UsuarioEntity exigirGestorEmpresa(Long empresaId) {
         UsuarioEntity usuario = getUsuarioAtual();
-        if (!possuiPapel(usuario.getId(), empresaId, Set.of(PapelEmpresa.GESTOR))) {
+        if (!isAdmin(usuario) && !possuiPapel(usuario.getId(), empresaId, Set.of(PapelEmpresa.GESTOR))) {
             throw acessoNegado();
         }
         return usuario;
@@ -55,28 +55,32 @@ public class AccessControlService {
 
     public UsuarioEntity exigirAcessoProjeto(ProjetoEntity projeto) {
         UsuarioEntity usuario = getUsuarioAtual();
-        boolean gestor = possuiPapel(usuario.getId(), projeto.getEmpresa().getId(), Set.of(PapelEmpresa.GESTOR));
-        boolean membro = projetoMembroRepository.existsByProjetoIdAndUsuarioIdAndAtivoTrue(projeto.getId(), usuario.getId());
-        boolean responsavel = projeto.getGestorResponsavel().getId().equals(usuario.getId());
-        if (!gestor && !membro && !responsavel) {
+        if (!possuiAcessoProjeto(usuario, projeto)) {
             throw acessoNegado();
         }
         return usuario;
     }
 
-    public UsuarioEntity exigirGestaoProjeto(ProjetoEntity projeto) {
-        UsuarioEntity usuario = getUsuarioAtual();
+    public boolean possuiAcessoProjeto(UsuarioEntity usuario, ProjetoEntity projeto) {
+        if (isAdmin(usuario)) return true;
+        if (!possuiVinculoAtivo(usuario, projeto)) return false;
         boolean gestor = possuiPapel(usuario.getId(), projeto.getEmpresa().getId(), Set.of(PapelEmpresa.GESTOR));
-        boolean coordenador = possuiPapel(usuario.getId(), projeto.getEmpresa().getId(), Set.of(PapelEmpresa.COORDENADOR));
         boolean membro = projetoMembroRepository.existsByProjetoIdAndUsuarioIdAndAtivoTrue(projeto.getId(), usuario.getId());
         boolean responsavel = projeto.getGestorResponsavel().getId().equals(usuario.getId());
-        if (!gestor && !responsavel && !(coordenador && membro)) {
+        return gestor || membro || responsavel;
+    }
+
+    public UsuarioEntity exigirGestaoProjeto(ProjetoEntity projeto) {
+        UsuarioEntity usuario = getUsuarioAtual();
+        if (!possuiGestaoProjeto(usuario, projeto)) {
             throw acessoNegado();
         }
         return usuario;
     }
 
     public boolean possuiGestaoProjeto(UsuarioEntity usuario, ProjetoEntity projeto) {
+        if (isAdmin(usuario)) return true;
+        if (!possuiVinculoAtivo(usuario, projeto)) return false;
         boolean gestor = possuiPapel(usuario.getId(), projeto.getEmpresa().getId(), Set.of(PapelEmpresa.GESTOR));
         boolean coordenador = possuiPapel(usuario.getId(), projeto.getEmpresa().getId(), Set.of(PapelEmpresa.COORDENADOR));
         boolean membro = projetoMembroRepository.existsByProjetoIdAndUsuarioIdAndAtivoTrue(projeto.getId(), usuario.getId());
@@ -86,6 +90,10 @@ public class AccessControlService {
     public UsuarioEntity exigirResponsavel(TarefaEntity tarefa) {
         UsuarioEntity usuario = getUsuarioAtual();
         if (tarefa.getResponsavel() == null || !tarefa.getResponsavel().getId().equals(usuario.getId())) {
+            throw acessoNegado();
+        }
+        if (!projetoMembroRepository.existsByProjetoIdAndUsuarioIdAndAtivoTrue(tarefa.getProjeto().getId(), usuario.getId())
+                || (!isAdmin(usuario) && !possuiVinculoAtivo(usuario, tarefa.getProjeto()))) {
             throw acessoNegado();
         }
         return usuario;
@@ -102,6 +110,15 @@ public class AccessControlService {
     private boolean possuiPapel(Long usuarioId, Long empresaId, Set<PapelEmpresa> papeis) {
         return vinculoRepository.existsByUsuarioIdAndEmpresaIdAndPapelInAndStatusAndAtivoTrue(
                 usuarioId, empresaId, papeis, StatusVinculo.APROVADO);
+    }
+
+    private boolean possuiVinculoAtivo(UsuarioEntity usuario, ProjetoEntity projeto) {
+        return vinculoRepository.findByUsuarioIdAndEmpresaIdAndStatusAndAtivoTrue(
+                usuario.getId(), projeto.getEmpresa().getId(), StatusVinculo.APROVADO).isPresent();
+    }
+
+    private boolean isAdmin(UsuarioEntity usuario) {
+        return usuario.getPerfilSistema() == PerfilSistema.ADMIN_FLOWOPS;
     }
 
     private NegocioException acessoNegado() {

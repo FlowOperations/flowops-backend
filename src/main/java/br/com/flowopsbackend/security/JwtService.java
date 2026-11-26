@@ -28,9 +28,7 @@ public class JwtService {
                 .issuer("flowops-api")
                 .issuedAt(agora)
                 .expiresAt(agora.plusSeconds(expiracaoSegundos))
-                .subject(usuario.getCpf())
-                .claim("uid", usuario.getId())
-                .claim("nome", usuario.getNomeCompleto())
+                .subject(usuario.getId().toString())
                 .claim("authorities", authorities)
                 .build();
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();

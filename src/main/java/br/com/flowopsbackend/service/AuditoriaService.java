@@ -11,6 +11,7 @@ import br.com.flowopsbackend.model.TarefaEntity;
 import br.com.flowopsbackend.model.UsuarioEntity;
 import br.com.flowopsbackend.model.enums.ResultadoAuditoria;
 import br.com.flowopsbackend.model.enums.StatusTarefa;
+import br.com.flowopsbackend.model.enums.PerfilSistema;
 import br.com.flowopsbackend.repository.AuditoriaRepository;
 import br.com.flowopsbackend.repository.TarefaRepository;
 import br.com.flowopsbackend.security.AccessControlService;
@@ -36,9 +37,7 @@ public class AuditoriaService {
 
     public List<TarefaResponse> listarPendentes() {
         UsuarioEntity usuario = accessControlService.getUsuarioAtual();
-        return tarefaRepository.findByStatusOrderByAtualizadoEmAsc(StatusTarefa.AGUARDANDO_AUDITORIA).stream()
-                .filter(tarefa -> accessControlService.possuiGestaoProjeto(usuario, tarefa.getProjeto()))
-                .filter(tarefa -> tarefa.getResponsavel() == null || !tarefa.getResponsavel().getId().equals(usuario.getId()))
+        return tarefaRepository.findAuditaveis(usuario.getId(), usuario.getPerfilSistema() == PerfilSistema.ADMIN_FLOWOPS).stream()
                 .map(tarefaMapper::toResponse).toList();
     }
 

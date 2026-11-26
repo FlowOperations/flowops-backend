@@ -37,6 +37,11 @@ public class VinculoEmpresaController {
         return service.listarMeus();
     }
 
+    @GetMapping("/solicitacoes/minhas")
+    public List<VinculoEmpresaResponse> listarMinhasSolicitacoes() {
+        return service.listarMinhasSolicitacoes();
+    }
+
     @GetMapping("/empresas/{empresaId}/pendentes")
     public List<VinculoEmpresaResponse> listarPendentes(@PathVariable Long empresaId) {
         return service.listarPendentes(empresaId);

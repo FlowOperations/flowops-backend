@@ -27,6 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -56,12 +58,13 @@ public class UsuarioService {
 
     public List<UsuarioAdministracaoResponse> listarAdministracao() {
         accessControlService.exigirAdminFlowOps();
-        return usuarioRepository.findByAtivoTrueOrderByNomeCompleto().stream()
-                .map(usuario -> toAdministracaoResponse(
-                        usuario,
-                        vinculoRepository.findByUsuarioIdAndStatusAndAtivoTrue(
-                                usuario.getId(), StatusVinculo.APROVADO)))
-                .toList();
+        List<UsuarioEntity> usuarios = usuarioRepository.findByAtivoTrueOrderByNomeCompleto();
+        if (usuarios.isEmpty()) return List.of();
+        Map<Long, List<VinculoEmpresaEntity>> vinculos = vinculoRepository.findByUsuarioIdInAndStatusAndAtivoTrue(
+                usuarios.stream().map(UsuarioEntity::getId).toList(), StatusVinculo.APROVADO).stream()
+                .collect(Collectors.groupingBy(v -> v.getUsuario().getId()));
+        return usuarios.stream().map(usuario -> toAdministracaoResponse(usuario,
+                vinculos.getOrDefault(usuario.getId(), List.of()))).toList();
     }
 
     @Transactional

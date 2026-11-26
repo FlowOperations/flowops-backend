@@ -4,6 +4,7 @@ import br.com.flowopsbackend.model.enums.PrioridadeTarefa;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.FutureOrPresent;
 
 import java.time.LocalDateTime;
 
@@ -12,7 +13,7 @@ public record TarefaRequest(
         @NotBlank @Size(max = 255) String titulo,
         @NotBlank @Size(max = 3000) String descricao,
         @NotNull PrioridadeTarefa prioridade,
-        @NotNull LocalDateTime prazo,
+        @NotNull @FutureOrPresent(message = "O prazo deve ser uma data e hora futura.") LocalDateTime prazo,
         Long responsavelId
 ) {
 }

@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import org.hibernate.validator.constraints.br.CPF;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -15,6 +16,7 @@ public record CadastroUsuarioAdminRequest(
         @NotBlank(message = "Informe o nome completo.") String nomeCompleto,
         @NotBlank(message = "Informe o CPF.")
         @Pattern(regexp = "\\d{11}", message = "O CPF deve conter exatamente 11 dígitos.")
+        @CPF(message = "Informe um CPF válido.")
         String cpf,
         @NotBlank(message = "Informe o e-mail.")
         @Email(message = "Informe um e-mail válido.")
