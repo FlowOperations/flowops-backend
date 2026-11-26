@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(properties = {
         "flowops.bootstrap.admin.enabled=true",
@@ -85,5 +86,45 @@ class AuthIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
+    }
+
+    @Test
+    void tokenUsaIdEmVezDeCpfENaoCarregaNome() throws Exception {
+        String login = autenticarAdministrador();
+        String token = JsonPath.read(login, "$.token");
+        Number id = JsonPath.read(login, "$.usuario.id");
+        String claims = new String(java.util.Base64.getUrlDecoder().decode(token.split("\\.")[1]), java.nio.charset.StandardCharsets.UTF_8);
+        assertThat((String) JsonPath.read(claims, "$.sub")).isEqualTo(id.toString());
+        assertThat(claims).doesNotContain("00000000000", "Administrador FlowOps", "\"nome\"");
+    }
+
+    @Test
+    void limitaTentativasDeLogin() throws Exception {
+        for (int i = 0; i < 5; i++) {
+            mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"cpf\":\"99999999999\",\"senha\":\"incorreta\"}"))
+                    .andExpect(status().isUnauthorized());
+        }
+        mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"cpf\":\"99999999999\",\"senha\":\"incorreta\"}"))
+                .andExpect(status().isTooManyRequests());
+    }
+
+    @Test
+    void recusaTokenAssinadoComAntigoSegredoPadrao() throws Exception {
+        String login = autenticarAdministrador();
+        Number id = JsonPath.read(login, "$.usuario.id");
+        var secret = new javax.crypto.spec.SecretKeySpec(
+                "flowops-local-development-secret-key-32".getBytes(java.nio.charset.StandardCharsets.UTF_8), "HmacSHA256");
+        var encoder = new org.springframework.security.oauth2.jwt.NimbusJwtEncoder(
+                new com.nimbusds.jose.jwk.source.ImmutableSecret<>(secret));
+        var service = new br.com.flowopsbackend.security.JwtService(encoder);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "expiracaoSegundos", 3600L);
+        var usuario = new br.com.flowopsbackend.model.UsuarioEntity("Teste", "00000000000", "teste@local.com", "hash",
+                java.time.LocalDate.of(1990, 1, 1), br.com.flowopsbackend.model.enums.PerfilSistema.ADMIN_FLOWOPS);
+        org.springframework.test.util.ReflectionTestUtils.setField(usuario, "id", id.longValue());
+        String token = service.gerarToken(usuario, java.util.List.of("ROLE_ADMIN_FLOWOPS"));
+        mockMvc.perform(get("/api/usuarios/administracao").header("Authorization", "Bearer " + token))
+                .andExpect(status().isUnauthorized());
     }
 }

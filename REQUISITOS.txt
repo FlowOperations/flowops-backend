@@ -1,0 +1,77 @@
+FlowOps — Requisitos e decisões vigentes
+Atualização após auditoria técnica de 26/11/2026
+
+Este registro substitui as descrições divergentes de RF01, RF02, RF03,
+RF04, RN02, RN03, RN04 e RNF05 do documento inicial do projeto.
+O PDF original de requisitos é um artefato histórico; não foi reeditado.
+
+Cadastro e autenticação
+O autocadastro solicita nome, CPF válido (incluindo dígitos verificadores),
+e-mail, senha e data de nascimento. Não há telefone, confirmação de
+e-mail/telefone nem autenticação em duas etapas implementados.
+O login usa CPF e senha. Contas ativas podem entrar sem vínculo empresarial
+para solicitar acesso em Empresas e acompanhar sua solicitação.
+O gestor da empresa ou o administrador FlowOps aprova ou recusa o pedido;
+na aprovação informa cargo e papel. Uma aprovação empresarial não adiciona
+a pessoa automaticamente a projetos. O gestor concede esse acesso.
+O cadastro administrativo pode criar administradores, gestores,
+coordenadores e funcionários, com vínculos e projetos iniciais.
+Novos cadastros recusam CPF inválido. Logins de contas de desenvolvimento
+preexistentes não são bloqueados apenas pelo dígito do CPF legado.
+
+Permissões
+O administrador FlowOps administra usuários e empresas e tem acesso
+global de leitura e gestão de projetos e tarefas. O gestor responsável
+selecionado para um projeto deve ter vínculo aprovado de gestor ou
+coordenador com a empresa.
+Gestores acessam os projetos da empresa. Coordenadores gerenciam os
+projetos aos quais foram adicionados. Funcionários acessam os projetos
+aos quais foram adicionados e visualizam o quadro completo da equipe.
+Não se aplica a regra antiga de visibilidade apenas da própria tarefa.
+Somente o responsável inicia uma tarefa ou a envia à auditoria, exigindo
+participação ativa no projeto e vínculo empresarial aprovado e ativo
+(administradores ainda precisam ser membros para executar tarefas próprias).
+Ao remover uma pessoa do projeto, as atribuições históricas são mantidas,
+mas ela perde a autorização para executar as tarefas. A gestão pode
+reatribuir tarefas editáveis para outro membro ativo.
+Gestão pode auditar tarefas enviadas, sempre sem auditar a própria tarefa.
+Atualizações concorrentes da tarefa geram conflito HTTP 409; uma decisão
+de auditoria que perdeu o conflito é revertida junto com sua transação.
+
+Notificações
+Notificações são enviadas após o commit, em executor assíncrono.
+Falha de SMTP não desfaz a operação. Não existe fila persistente ou retry
+automático: indisponibilidades são registradas e podem perder notificações.
+
+Operação e segurança
+FLOWOPS_JWT_SECRET é obrigatório, com pelo menos 32 bytes, e o antigo
+segredo padrão é recusado. Usar segredo aleatório fora do Git.
+O bootstrap também exige senha explícita para criar um novo administrador.
+A troca do segredo e do subject para ID exige novo login em sessões antigas.
+JWT contém ID interno em sub, sem CPF ou nome, e valida issuer e expiração.
+Há bloqueio após 5 falhas de login por CPF em janela de 15 minutos,
+mantido em memória por instância. Deploy com múltiplas instâncias deve
+centralizar o controle ou reforçá-lo no proxy.
+Swagger fica desligado por padrão. FLOWOPS_API_DOCS_ENABLED=true habilita
+as rotas, ainda exigindo token de administrador.
+Prazo informado no cadastro/edição de tarefa deve ser futuro ou presente.
+O token ainda fica no localStorage; migrar para cookie HttpOnly exige
+projetar também CSRF, expiração e renovação de sessão.
+
+Desempenho e próximos passos
+Filtros de projetos acessíveis e fila de auditoria executam no banco.
+Vínculos administrativos são carregados em lote; progresso das listagens
+de projetos usa uma consulta agrupada. Relações exibidas usam EntityGraph.
+A paginação das grids continua local. Paginação e busca no servidor (D2)
+ficam para mudança coordenada do contrato HTTP e do componente de grid.
+Flyway/Liquibase (M1) fica para preparação da VM, com baseline revisada
+contra o schema real e teste de upgrade em cópia do banco. Não basta
+trocar ddl-auto=update por validate sem migrar a estrutura existente.
+A coluna tarefas.versao deve estar preenchida com 0 para linhas antigas
+antes de validar o schema em produção; novos registros são versionados.
+
+Escopo desta correção
+C1, I1–I5, D1, M2, N1 e N2 tratados no código e com regressões automatizadas.
+C2: regras atuais registradas aqui e CPF validado no front e back.
+M3: limite de login e minimização do token tratados; cookie HttpOnly pendente.
+D2 e M1 permanecem registrados para a próxima etapa.

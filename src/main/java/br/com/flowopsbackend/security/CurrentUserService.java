@@ -20,7 +20,13 @@ public class CurrentUserService {
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
             throw new NegocioException(HttpStatus.UNAUTHORIZED, "Autenticação necessária");
         }
-        return usuarioRepository.findByCpf(authentication.getName())
+        Long usuarioId;
+        try {
+            usuarioId = Long.valueOf(authentication.getName());
+        } catch (NumberFormatException exception) {
+            throw new NegocioException(HttpStatus.UNAUTHORIZED, "Usuário autenticado inválido");
+        }
+        return usuarioRepository.findById(usuarioId)
                 .filter(UsuarioEntity::isAtivo)
                 .orElseThrow(() -> new NegocioException(HttpStatus.UNAUTHORIZED, "Usuário autenticado inválido"));
     }

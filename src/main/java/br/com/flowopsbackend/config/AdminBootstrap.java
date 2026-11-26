@@ -39,6 +39,9 @@ public class AdminBootstrap implements CommandLineRunner {
         if (usuarioRepository.existsByCpf(cpf)) {
             return;
         }
+        if (senha == null || senha.isBlank() || senha.length() < 8) {
+            throw new IllegalStateException("Configure FLOWOPS_BOOTSTRAP_ADMIN_SENHA com pelo menos 8 caracteres para criar o administrador");
+        }
         UsuarioEntity admin = new UsuarioEntity(
                 nome,
                 cpf,

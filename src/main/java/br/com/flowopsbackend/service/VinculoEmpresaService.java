@@ -62,6 +62,11 @@ public class VinculoEmpresaService {
                 .stream().map(mapper::toResponse).toList();
     }
 
+    public List<VinculoEmpresaResponse> listarMinhasSolicitacoes() {
+        return vinculoRepository.findByUsuarioIdOrderBySolicitadoEmDesc(accessControlService.getUsuarioAtual().getId())
+                .stream().map(mapper::toResponse).toList();
+    }
+
     public List<VinculoEmpresaResponse> listarPendentes(Long empresaId) {
         accessControlService.exigirGestorEmpresa(empresaId);
         return vinculoRepository.findByEmpresaIdAndStatusOrderBySolicitadoEmAsc(empresaId, StatusVinculo.SOLICITADO)

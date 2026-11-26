@@ -3,6 +3,8 @@ package br.com.flowopsbackend.exception;
 import br.com.flowopsbackend.dto.response.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
+import jakarta.persistence.OptimisticLockException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -13,6 +15,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
@@ -22,6 +25,16 @@ import java.util.Map;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleNotFound(NoResourceFoundException exception, HttpServletRequest request) {
+        return resposta(HttpStatus.NOT_FOUND, "Recurso não encontrado", request, null);
+    }
+
+    @ExceptionHandler({OptimisticLockingFailureException.class, OptimisticLockException.class})
+    public ResponseEntity<ApiErrorResponse> handleConcurrentUpdate(Exception exception, HttpServletRequest request) {
+        return resposta(HttpStatus.CONFLICT, "Esta tarefa foi alterada por outra pessoa. Atualize a tela e tente novamente.", request, null);
+    }
 
     @ExceptionHandler(NegocioException.class)
     public ResponseEntity<ApiErrorResponse> handleNegocio(NegocioException exception, HttpServletRequest request) {

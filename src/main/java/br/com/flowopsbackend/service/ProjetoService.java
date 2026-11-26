@@ -29,9 +29,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -64,10 +66,17 @@ public class ProjetoService {
 
     public List<ProjetoResponse> listar(Long empresaId) {
         UsuarioEntity usuario = accessControlService.getUsuarioAtual();
-        List<ProjetoEntity> projetos = projetoRepository.findByEmpresaIdOrderByCriadoEmDesc(empresaId);
-        LinkedHashMap<Long, ProjetoEntity> permitidos = new LinkedHashMap<>();
-        projetos.stream().filter(projeto -> temAcesso(usuario, projeto)).forEach(p -> permitidos.put(p.getId(), p));
-        return permitidos.values().stream().map(this::resposta).toList();
+        List<ProjetoEntity> projetos = projetoRepository.findAcessiveis(empresaId, usuario.getId(),
+                usuario.getPerfilSistema() == PerfilSistema.ADMIN_FLOWOPS);
+        if (projetos.isEmpty()) return List.of();
+        Map<Long, TarefaRepository.Progresso> progresso = tarefaRepository.contarProgresso(
+                projetos.stream().map(ProjetoEntity::getId).toList(), StatusTarefa.APROVADA).stream()
+                .collect(Collectors.toMap(TarefaRepository.Progresso::getProjetoId, Function.identity()));
+        return projetos.stream().map(projeto -> {
+            TarefaRepository.Progresso contagem = progresso.get(projeto.getId());
+            return mapper.toResponse(projeto, contagem == null ? BigDecimal.ZERO.setScale(2)
+                    : percentual(contagem.getAprovadas(), contagem.getTotal()));
+        }).toList();
     }
 
     public ProjetoResponse buscarPorId(Long id) {
@@ -137,6 +146,10 @@ public class ProjetoService {
             return BigDecimal.ZERO.setScale(2);
         }
         long aprovadas = tarefaRepository.countByProjetoIdAndStatus(projetoId, StatusTarefa.APROVADA);
+        return percentual(aprovadas, total);
+    }
+
+    private BigDecimal percentual(long aprovadas, long total) {
         return BigDecimal.valueOf(aprovadas).multiply(BigDecimal.valueOf(100))
                 .divide(BigDecimal.valueOf(total), 2, RoundingMode.HALF_UP);
     }
@@ -166,14 +179,6 @@ public class ProjetoService {
                 usuarioId, empresaId, StatusVinculo.APROVADO).isEmpty()) {
             throw new NegocioException(HttpStatus.BAD_REQUEST, "Usuário não possui vínculo ativo com a empresa");
         }
-    }
-
-    private boolean temAcesso(UsuarioEntity usuario, ProjetoEntity projeto) {
-        return usuario.getPerfilSistema() == PerfilSistema.ADMIN_FLOWOPS
-                || projeto.getGestorResponsavel().getId().equals(usuario.getId())
-                || membroRepository.existsByProjetoIdAndUsuarioIdAndAtivoTrue(projeto.getId(), usuario.getId())
-                || vinculoRepository.existsByUsuarioIdAndEmpresaIdAndPapelInAndStatusAndAtivoTrue(
-                usuario.getId(), projeto.getEmpresa().getId(), Set.of(PapelEmpresa.GESTOR), StatusVinculo.APROVADO);
     }
 
     private void validarDatas(ProjetoRequest request) {

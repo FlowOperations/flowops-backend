@@ -81,7 +81,7 @@ class ProjetoServiceTest {
                 LocalDate.now(), LocalDate.now().plusMonths(1));
         ReflectionTestUtils.setField(projeto, "id", 20L);
         when(accessControlService.getUsuarioAtual()).thenReturn(admin);
-        when(projetoRepository.findByEmpresaIdOrderByCriadoEmDesc(10L)).thenReturn(List.of(projeto));
+        when(projetoRepository.findAcessiveis(10L, 1L, true)).thenReturn(List.of(projeto));
 
         assertThat(service.listar(10L))
                 .singleElement()

@@ -12,6 +12,7 @@ import br.com.flowopsbackend.model.enums.StatusVinculo;
 import br.com.flowopsbackend.repository.UsuarioRepository;
 import br.com.flowopsbackend.repository.VinculoEmpresaRepository;
 import br.com.flowopsbackend.security.JwtService;
+import br.com.flowopsbackend.security.LoginAttemptService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -32,6 +33,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final UsuarioMapper usuarioMapper;
+    private final LoginAttemptService loginAttempts;
 
     @Transactional
     public UsuarioResponse cadastrar(CadastroUsuarioRequest request) {
@@ -53,17 +55,13 @@ public class AuthService {
     }
 
     public AuthResponse autenticar(LoginRequest request) {
-        UsuarioEntity usuario = usuarioRepository.findByCpf(request.cpf())
-                .filter(UsuarioEntity::isAtivo)
-                .orElseThrow(() -> new BadCredentialsException("Credenciais inválidas"));
-        if (!passwordEncoder.matches(request.senha(), usuario.getSenhaHash())) {
+        loginAttempts.exigirPermitido(request.cpf());
+        UsuarioEntity usuario = usuarioRepository.findByCpf(request.cpf()).filter(UsuarioEntity::isAtivo).orElse(null);
+        if (usuario == null || !passwordEncoder.matches(request.senha(), usuario.getSenhaHash())) {
+            loginAttempts.registrarFalha(request.cpf());
             throw new BadCredentialsException("Credenciais inválidas");
         }
-        boolean possuiVinculo = vinculoRepository.existsByUsuarioIdAndStatusAndAtivoTrue(
-                usuario.getId(), StatusVinculo.APROVADO);
-        if (usuario.getPerfilSistema() != PerfilSistema.ADMIN_FLOWOPS && !possuiVinculo) {
-            throw new NegocioException(HttpStatus.FORBIDDEN, "Usuário não possui vínculo empresarial aprovado");
-        }
+        loginAttempts.registrarSucesso(request.cpf());
         Set<String> authorities = new LinkedHashSet<>();
         authorities.add("ROLE_" + usuario.getPerfilSistema().name());
         vinculoRepository.findByUsuarioIdAndStatusAndAtivoTrue(usuario.getId(), StatusVinculo.APROVADO)
